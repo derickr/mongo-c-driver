@@ -82,6 +82,10 @@ mongoc_cursor_new_from_command_reply (struct _mongoc_client_t *client,
                                       bson_t *reply,
                                       uint32_t server_id)
    BSON_GNUC_WARN_UNUSED_RESULT;
+MONGOC_EXPORT (mongoc_cursor_t *)
+mongoc_cursor_new_from_reply (struct _mongoc_client_t *client,
+                              bson_t *reply,
+                              uint32_t server_id);
 
 BSON_END_DECLS
 

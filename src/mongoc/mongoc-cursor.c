@@ -2243,3 +2243,53 @@ mongoc_cursor_new_from_command_reply (mongoc_client_t *client,
 
    return cursor;
 }
+
+
+/*
+ *--------------------------------------------------------------------------
+ *
+ * mongoc_cursor_new_from_reply --
+ *
+ *       Low-level function to initialize a mongoc_cursor_t from the
+ *       reply to a command that returns a single reply document
+ *
+ *       Useful in drivers that wrap the C driver; in applications, use
+ *       high-level functions like mongoc_collection_aggregate instead.
+ *
+ * Returns:
+ *       A cursor.
+ *
+ * Side effects:
+ *       On failure, the cursor's error is set: retrieve it with
+ *       mongoc_cursor_error. On success or failure, "reply" is
+ *       destroyed.
+ *
+ *--------------------------------------------------------------------------
+ */
+
+mongoc_cursor_t *
+mongoc_cursor_new_from_reply (mongoc_client_t *client,
+                              bson_t *reply,
+                              uint32_t server_id)
+{
+   mongoc_cursor_t *cursor;
+   bson_t cmd = BSON_INITIALIZER;
+   bson_t array = BSON_INITIALIZER;
+   char str[16];
+   const char *key;
+
+   BSON_ASSERT (client);
+   BSON_ASSERT (reply);
+
+   bson_uint32_to_string (0, &key, str, sizeof str);
+   bson_append_document(&array, key, -1, reply);
+
+   cursor = _mongoc_cursor_new_with_opts (
+      client, NULL, false /* is_find */, NULL, NULL, NULL, NULL);
+
+   _mongoc_cursor_cursorid_init (cursor, &cmd);
+   _mongoc_cursor_cursorid_init_with_reply (cursor, &array, server_id);
+   bson_destroy (&cmd);
+
+   return cursor;
+}
